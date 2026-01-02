@@ -28,8 +28,8 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          gh release create ${{ github.ref_name }} \
-          --title "Release ${{ github.ref_name }}" \
-          --notes "$(cat RELEASE_NOTES.md)"
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "Release ${GITHUB_REF_NAME}" \
+            --notes "${{ steps.extract_notes.outputs.notes }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
