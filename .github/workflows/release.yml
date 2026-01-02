@@ -4,7 +4,11 @@ on:
   push:
     tags:
       - 'v*'  # triggers on any tag starting with 'v'
-
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (use for manual dispatch)"
+        required: false
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -13,10 +17,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set release tag
+        id: set_tag
+        run: |
+          RAW_TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$RAW_TAG" ]; then
+            # Tag push: extract from GITHUB_REF
+            RAW_TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          # Strip leading 'v' for matching changelog
+          TAG="${RAW_TAG#v}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "raw_tag=$RAW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Checkout tag commit
+        run: |
+          git fetch --tags
+          git checkout "${{ steps.set_tag.outputs.raw_tag }}"
+
       - name: Extract release notes
         id: extract_notes
         run: |
-            TAG="${GITHUB_REF_NAME#v}"   # remove leading 'v' if your tag is 'v1.0.0'
+            TAG="${{ steps.set_tag.outputs.tag }}"
             awk -v tag="$TAG" '
                 /^## \[.*\]/ {in_section=0}               # Reset at every header
                 $0 ~ "^## \\[" tag "\\]" {in_section=1; next}  # Start when we find the tag
@@ -28,8 +50,9 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "Release ${GITHUB_REF_NAME}" \
-            --notes-file RELEASE_NOTES.md
+          gh release create "${{ steps.set_tag.outputs.raw_tag }}" \
+            --title "Release ${{ steps.set_tag.outputs.raw_tag }}" \
+            --notes-file RELEASE_NOTES.md \
+            --target "${{ steps.set_tag.outputs.raw_tag }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
