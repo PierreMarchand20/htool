@@ -21,6 +21,9 @@ jobs:
             echo "notes<<EOF" >> $GITHUB_OUTPUT
             echo "$NOTES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
+            echo "TAG=$TAG"
+            echo "EXTRACTED NOTES:"
+            echo "$NOTES"
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
