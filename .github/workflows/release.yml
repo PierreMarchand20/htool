@@ -30,6 +30,6 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" \
             --title "Release ${GITHUB_REF_NAME}" \
-            --notes RELEASE_NOTES.md
+            --notes-file RELEASE_NOTES.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
