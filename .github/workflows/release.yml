@@ -17,7 +17,11 @@ jobs:
         id: extract_notes
         run: |
             TAG="${GITHUB_REF_NAME#v}"   # remove leading 'v' if your tag is 'v1.0.0'
-            NOTES=$(awk "/^## \\[${TAG}\\]/,/^## \\[/" CHANGELOG.md | sed '1d;$d' | sed '/^\s*$/d')
+            NOTES=$(awk -v tag="$TAG" '
+                /^## \[.*\]/ {in_section=0}               # Reset at every header
+                $0 ~ "^## \\[" tag "\\]" {in_section=1; next}  # Start when we find the tag
+                in_section {print}
+            ' CHANGELOG.md)
             echo "notes<<EOF" >> $GITHUB_OUTPUT
             echo "$NOTES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
