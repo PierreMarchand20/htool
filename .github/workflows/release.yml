@@ -9,6 +9,10 @@ on:
       tag:
         description: "Tag to release (use for manual dispatch)"
         required: false
+
+permissions:
+  contents: write   # required for gh release create
+
 jobs:
   release:
     runs-on: ubuntu-latest
